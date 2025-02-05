@@ -34,20 +34,12 @@ def receiveData():
         else:
             print("Setting filter profile failed!")
 
-        print("Setting quaternion CSV output")
-        device.setLogOptions(movelladot_pc_sdk.XsLogOptions_Quaternion)
-
-        logFileName = "logfile_" + device.bluetoothAddress().replace(':', '-') + ".csv"
-        print(f"Enable logging to: {logFileName}")
-        if not device.enableLogging(logFileName):
-            print(f"Failed to enable logging. Reason: {device.lastResultText()}")
-
         print("Putting device into measurement mode.")
         if not device.startMeasurement(movelladot_pc_sdk.XsPayloadMode_ExtendedEuler):
             print(f"Could not put device into measurement mode. Reason: {device.lastResultText()}")
             continue
 
-    print("\nMain loop. Recording data for 10 seconds.")
+    print("\nMain loop. Recording data")
     print("-----------------------------------------")
 
     # First printing some headers so we see which data belongs to which device
@@ -65,7 +57,7 @@ def receiveData():
     conn, addr = server_socket.accept()
     print(f"Connected by {addr}")
 
-    while movelladot_pc_sdk.XsTimeStamp_nowMs() - startTime <= 10000:
+    while True:
         if xdpcHandler.packetsAvailable():
             s = ""
             for device in xdpcHandler.connectedDots():
@@ -76,7 +68,7 @@ def receiveData():
                     euler = packet.orientationEuler()
                     s += f"Roll:{euler.x():7.2f}, Pitch:{euler.y():7.2f}, Yaw:{euler.z():7.2f}| "
                     
-                    #conn.sendall(f"{euler.x():7.2f}".encode())
+                    conn.sendall(f"{euler.x():7.2f}".encode())
                     
                    
 
@@ -117,9 +109,3 @@ def receiveData():
 if __name__ == "__main__":
     receiveData()
     exit(0)
-
-
-
-
-
-

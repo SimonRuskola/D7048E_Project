@@ -109,9 +109,3 @@ def receiveData():
 if __name__ == "__main__":
     receiveData()
     exit(0)
-
-
-
-
-
-
