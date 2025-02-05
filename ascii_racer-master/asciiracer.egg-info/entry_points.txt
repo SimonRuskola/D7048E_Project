@@ -1,0 +1,3 @@
+[console_scripts]
+asciiracer = asciiracer.__main__:main
+
