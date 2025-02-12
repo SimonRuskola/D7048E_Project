@@ -1,6 +1,7 @@
 
 from xdpchandler import *
 import vgamepad as vg
+import time
 
 gamepad = vg.VX360Gamepad()
 
@@ -97,6 +98,7 @@ if __name__ == "__main__":
 
             gamepad.right_joystick_float(x_value_float=x_value, y_value_float=y_value)
             gamepad.update()
+            gamepad.reset()
 
     print("\n-----------------------------------------", end="", flush=True)
 
