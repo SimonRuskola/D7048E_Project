@@ -93,8 +93,24 @@ if __name__ == "__main__":
                 orientationResetDone = True
 
             
-            x_value = euler.x()/180
-            y_value = euler.y()/180 
+            x_value = euler.x()/40
+            y_value = euler.y()/20
+
+            if x_value > 1:
+                x_value = 1
+            if (x_value < -1):
+                x_value = -1
+            
+            if y_value > 1:
+                y_value = 1
+            if y_value < -1:
+                y_value = -1
+
+
+        
+
+            """ x_value = acc[0]/10
+            y_value = acc[2]/10 """
 
             gamepad.right_joystick_float(x_value_float=x_value, y_value_float=y_value)
             gamepad.update()
