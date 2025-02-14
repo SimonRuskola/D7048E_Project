@@ -1,11 +1,9 @@
-
 from xdpchandler import *
 import vgamepad as vg
 import time
+from InputProcessor import TiltInputProcessor, InputProcessor, AccelerationInputProcessor, PositionInputProcessor
 
-gamepad = vg.VX360Gamepad()
-
-if __name__ == "__main__":
+def initXdpcHandler():
     xdpcHandler = XdpcHandler()
 
     if not xdpcHandler.initialize():
@@ -45,6 +43,10 @@ if __name__ == "__main__":
             print(f"Could not put device into measurement mode. Reason: {device.lastResultText()}")
             continue
 
+    return xdpcHandler
+
+
+def loopData(xdpcHandler, inputProcessor):
     print("\nMain loop. Recording data for 10 seconds.")
     print("-----------------------------------------")
 
@@ -54,52 +56,13 @@ if __name__ == "__main__":
         s += f"{device.bluetoothAddress():42}"
     print("%s" % s, flush=True)
 
-    startTime = movelladot_pc_sdk.XsTimeStamp_nowMs()
+    #startTime = movelladot_pc_sdk.XsTimeStamp_nowMs()
     while True:
         if xdpcHandler.packetsAvailable():
             s = ""
             for device in xdpcHandler.connectedDots():
                 # Retrieve a packet
-                packet = xdpcHandler.getNextPacket(device.portInfo().bluetoothAddress())
-
-                if packet.containsOrientation():
-                    euler = packet.orientationEuler()
-                    s += f"Roll:{euler.x():7.2f}, Pitch:{euler.y():7.2f}, Yaw:{euler.z():7.2f}| "
-
-            
-                if packet.containsFreeAcceleration():
-                    acc = packet.freeAcceleration()
-                    s += f"AccX:{acc[0]:7.2f}, AccY:{acc[2]:7.2f}, AccZ:{acc[1]:7.2f} | "
-
-              
-
-            print("%s\r" % s, end="", flush=True)
-
-
-            #sensitivity for joystick axis values. Lower is more sensitive
-            x_sens = 40
-            y_sens = 20
-            
-            x_value = euler.x()/x_sens
-            y_value = euler.y()/y_sens
-
-
-            if x_value > 1:
-                x_value = 1
-            if (x_value < -1):
-                x_value = -1
-            
-            if y_value > 1:
-                y_value = 1
-            if y_value < -1:
-                y_value = -1
-
-            """x_value = acc[0]/20
-            y_value = acc[2]/20 """
-
-            gamepad.right_joystick_float(x_value_float=x_value, y_value_float=y_value)
-            gamepad.update()
-            gamepad.reset()
+                inputProcessor.processInput(device)
 
     print("\n-----------------------------------------", end="", flush=True)
 
@@ -119,3 +82,18 @@ if __name__ == "__main__":
             print("Failed to disable logging.")
 
     xdpcHandler.cleanup()
+
+def recieveData():
+    xdpcHandler = initXdpcHandler()
+    gamepad = vg.VX360Gamepad()
+    #inputProcessor = TiltInputProcessor(gamepad,xdpcHandler)
+    #inputProcessor = AccelerationInputProcessor(gamepad, xdpcHandler)
+    inputProcessor = PositionInputProcessor(gamepad, xdpcHandler)
+    loopData(xdpcHandler, inputProcessor)
+
+if __name__ == "__main__":
+    recieveData()
+
+
+
+
