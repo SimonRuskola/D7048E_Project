@@ -1,21 +1,34 @@
 from abc import ABC, abstractmethod
 
 class InputProcessor(ABC):
-    @abstractmethod
-    def processInput(self, device):
-        pass
-
-
-
-class TiltInputProcessor(InputProcessor):
     def __init__(self, gamepad, xdpcHandler):
         self.gamepad = gamepad
         self.xdpcHandler = xdpcHandler
 
+    @abstractmethod
     def processInput(self, device):
+        pass
 
+    def updateJoystick(self, x_value, y_value):
+        if x_value > 1:
+            x_value = 1
+        if x_value < -1:
+            x_value = -1
+
+        if y_value > 1:
+            y_value = 1
+        if y_value < -1:
+            y_value = -1
+
+        self.gamepad.right_joystick_float(x_value_float=x_value, y_value_float=y_value)
+        self.gamepad.update()
+
+class TiltInputProcessor(InputProcessor):
+    def __init__(self, gamepad, xdpcHandler):
+        super().__init__(gamepad, xdpcHandler)
+
+    def processInput(self, device):
         packet = self.xdpcHandler.getNextPacket(device.portInfo().bluetoothAddress())
-       
         s = ""
 
         if packet.containsOrientation():
@@ -34,27 +47,14 @@ class TiltInputProcessor(InputProcessor):
         x_value = euler.x() / x_sens
         y_value = euler.y() / y_sens
 
-        if x_value > 1:
-            x_value = 1
-        if x_value < -1:
-            x_value = -1
-
-        if y_value > 1:
-            y_value = 1
-        if y_value < -1:
-            y_value = -1
-
-        self.gamepad.right_joystick_float(x_value_float=x_value, y_value_float=y_value)
-        self.gamepad.update()
+        self.updateJoystick(x_value, y_value)
 
 class AccelerationInputProcessor(InputProcessor):
     def __init__(self, gamepad, xdpcHandler):
-        self.gamepad = gamepad
-        self.xdpcHandler = xdpcHandler
+        super().__init__(gamepad, xdpcHandler)
 
     def processInput(self, device):
         packet = self.xdpcHandler.getNextPacket(device.portInfo().bluetoothAddress())
-       
         s = ""
 
         if packet.containsFreeAcceleration():
@@ -69,23 +69,11 @@ class AccelerationInputProcessor(InputProcessor):
         x_value = acc[0] / x_sens
         y_value = acc[1] / y_sens
 
-        if x_value > 1:
-            x_value = 1
-        if x_value < -1:
-            x_value = -1
-
-        if y_value > 1:
-            y_value = 1
-        if y_value < -1:
-            y_value = -1
-
-        self.gamepad.right_joystick_float(x_value_float=x_value, y_value_float=y_value)
-        self.gamepad.update()
+        self.updateJoystick(x_value, y_value)
 
 class PositionInputProcessor(InputProcessor):
     def __init__(self, gamepad, xdpcHandler):
-        self.gamepad = gamepad
-        self.xdpcHandler = xdpcHandler
+        super().__init__(gamepad, xdpcHandler)
         self.position = [0, 0, 0]
         self.velocity = [0, 0, 0]
         self.last_time = None
@@ -120,16 +108,5 @@ class PositionInputProcessor(InputProcessor):
         x_value = self.position[0] / x_sens
         y_value = self.position[1] / y_sens
 
-        if x_value > 1:
-            x_value = 1
-        if x_value < -1:
-            x_value = -1
-
-        if y_value > 1:
-            y_value = 1
-        if y_value < -1:
-            y_value = -1
-
-        self.gamepad.right_joystick_float(x_value_float=x_value, y_value_float=y_value)
-        self.gamepad.update()
+        self.updateJoystick(x_value, y_value)
 
