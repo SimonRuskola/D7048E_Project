@@ -1,7 +1,7 @@
 from xdpchandler import *
 import vgamepad as vg
 import time
-from InputProcessor import TiltInputProcessor, InputProcessor, AccelerationInputProcessor, PositionInputProcessor
+from InputProcessor import *
 
 def initXdpcHandler():
     xdpcHandler = XdpcHandler()
