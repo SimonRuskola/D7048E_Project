@@ -1,4 +1,7 @@
 from abc import ABC, abstractmethod
+import math
+import vgamepad as vg
+import time
 
 class InputProcessor(ABC):
     def __init__(self, gamepad, xdpcHandler):
@@ -9,7 +12,7 @@ class InputProcessor(ABC):
     def processInput(self, device):
         pass
 
-    def updateJoystick(self, x_value, y_value):
+    def updateRightJoystick(self, x_value, y_value): # todo maybe include deadzone
         if x_value > 1:
             x_value = 1
         if x_value < -1:
@@ -47,7 +50,7 @@ class TiltInputProcessor(InputProcessor):
         x_value = euler.x() / x_sens
         y_value = euler.y() / y_sens
 
-        self.updateJoystick(x_value, y_value)
+        self.updateRightJoystick(x_value, y_value)
 
 class AccelerationInputProcessor(InputProcessor):
     def __init__(self, gamepad, xdpcHandler):
@@ -69,7 +72,7 @@ class AccelerationInputProcessor(InputProcessor):
         x_value = acc[0] / x_sens
         y_value = acc[1] / y_sens
 
-        self.updateJoystick(x_value, y_value)
+        self.updateRightJoystick(x_value, y_value)
 
 class PositionInputProcessor(InputProcessor):
     def __init__(self, gamepad, xdpcHandler):
@@ -108,5 +111,45 @@ class PositionInputProcessor(InputProcessor):
         x_value = self.position[0] / x_sens
         y_value = self.position[1] / y_sens
 
-        self.updateJoystick(x_value, y_value)
+        self.updateRightJoystick(x_value, y_value)
 
+class InputProcessorTest(InputProcessor):
+    def __init__(self, gamepad, xdpcHandler):
+        super().__init__(gamepad, xdpcHandler)
+        self.alpha = 0.5  # Smoothing factor for low-pass filter
+        self.filtered_acc = [0, 0, 0]
+
+    def low_pass_filter(self, acc):
+        for i in range(3):
+            self.filtered_acc[i] = self.alpha * acc[i] + (1 - self.alpha) * self.filtered_acc[i]
+        return self.filtered_acc
+
+    def processInput(self, device):
+        packet = self.xdpcHandler.getNextPacket(device.portInfo().bluetoothAddress())
+        s = ""
+
+        if packet.containsFreeAcceleration():
+            acc = packet.freeAcceleration()
+            filtered_acc = self.low_pass_filter(acc)
+            totalAcc = math.sqrt(sum(fa ** 2 for fa in filtered_acc))
+            s += f"AccX:{filtered_acc[0]:7.2f}, AccY:{filtered_acc[2]:7.2f}, AccZ:{filtered_acc[1]:7.2f}, AccTot:{totalAcc:7.2f}  | "
+        
+        print("%s\r" % s, end="", flush=True)
+
+        if totalAcc > 10:
+            self.gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+            self.gamepad.update()
+            time.sleep(0.2)  
+            self.gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+            self.gamepad.update()
+
+
+       
+
+           
+
+        
+
+        
+
+      

@@ -89,6 +89,7 @@ def recieveData():
     inputProcessor = TiltInputProcessor(gamepad,xdpcHandler)
     #inputProcessor = AccelerationInputProcessor(gamepad, xdpcHandler)
     #inputProcessor = PositionInputProcessor(gamepad, xdpcHandler)
+    #inputProcessor = InputProcessorTest(gamepad, xdpcHandler)
     loopData(xdpcHandler, inputProcessor)
 
 if __name__ == "__main__":
