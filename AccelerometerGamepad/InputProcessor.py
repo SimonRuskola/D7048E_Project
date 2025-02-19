@@ -42,7 +42,7 @@ class TiltInputProcessor(InputProcessor):
             acc = packet.freeAcceleration()
             s += f"AccX:{acc[0]:7.2f}, AccY:{acc[2]:7.2f}, AccZ:{acc[1]:7.2f} | "
 
-        print("%s\r" % s, end="", flush=True)
+        #print("%s\r" % s, end="", flush=True)
         
         x_sens = 40
         y_sens = 20
@@ -113,13 +113,14 @@ class PositionInputProcessor(InputProcessor):
 
         self.updateRightJoystick(x_value, y_value)
 
-class InputProcessorTest(InputProcessor):
+class ButtonInputProcessor(InputProcessor):
     def __init__(self, gamepad, xdpcHandler):
         super().__init__(gamepad, xdpcHandler)
-        self.alpha = 0.5  # Smoothing factor for low-pass filter
         self.filtered_acc = [0, 0, 0]
+        self.alpha = 0.5  # Smoothing factor for low-pass filter
 
-    def low_pass_filter(self, acc):
+
+    def low_pass_filter(self, acc): # not sure if this helps
         for i in range(3):
             self.filtered_acc[i] = self.alpha * acc[i] + (1 - self.alpha) * self.filtered_acc[i]
         return self.filtered_acc
@@ -134,22 +135,22 @@ class InputProcessorTest(InputProcessor):
             totalAcc = math.sqrt(sum(fa ** 2 for fa in filtered_acc))
             s += f"AccX:{filtered_acc[0]:7.2f}, AccY:{filtered_acc[2]:7.2f}, AccZ:{filtered_acc[1]:7.2f}, AccTot:{totalAcc:7.2f}  | "
         
+
         print("%s\r" % s, end="", flush=True)
+
 
         if totalAcc > 10:
             self.gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
             self.gamepad.update()
-            time.sleep(0.2)  
+            time.sleep(0.1)  
             self.gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
             self.gamepad.update()
 
 
-       
 
-           
 
-        
 
-        
 
-      
+
+
+

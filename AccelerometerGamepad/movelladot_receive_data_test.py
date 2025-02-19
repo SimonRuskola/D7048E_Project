@@ -2,6 +2,9 @@ from xdpchandler import *
 import vgamepad as vg
 import time
 from InputProcessor import *
+import threading
+
+stop_event = threading.Event()
 
 def initXdpcHandler():
     xdpcHandler = XdpcHandler()
@@ -45,24 +48,34 @@ def initXdpcHandler():
 
     return xdpcHandler
 
+def inputProcessorLoop(xdpcHandler, inputProcessor, deviceIndex):
+    while not stop_event.is_set():
+        if xdpcHandler.packetsAvailable():
+            device = xdpcHandler.connectedDots()[deviceIndex]
+            inputProcessor.processInput(device)
 
-def loopData(xdpcHandler, inputProcessor):
-    print("\nMain loop. Recording data for 10 seconds.")
-    print("-----------------------------------------")
-
+def loopData(xdpcHandler, inputProcessor, inputProcessor2):
+   
     # First printing some headers so we see which data belongs to which device
     s = ""
     for device in xdpcHandler.connectedDots():
         s += f"{device.bluetoothAddress():42}"
     print("%s" % s, flush=True)
 
-    #startTime = movelladot_pc_sdk.XsTimeStamp_nowMs()
-    while True:
-        if xdpcHandler.packetsAvailable():
-            s = ""
-            for device in xdpcHandler.connectedDots():
-                # Retrieve a packet
-                inputProcessor.processInput(device)
+    # Create and start threads for input processors
+    thread1 = threading.Thread(target=inputProcessorLoop, args=(xdpcHandler, inputProcessor, 0))
+    thread2 = threading.Thread(target=inputProcessorLoop, args=(xdpcHandler, inputProcessor2, 1))
+    thread1.start()
+    thread2.start()
+
+    try:
+        while thread1.is_alive() and thread2.is_alive():
+            thread1.join(timeout=1)
+            thread2.join(timeout=1)
+    except KeyboardInterrupt:
+        stop_event.set()
+        thread1.join()
+        thread2.join()
 
     print("\n-----------------------------------------", end="", flush=True)
 
@@ -86,11 +99,11 @@ def loopData(xdpcHandler, inputProcessor):
 def recieveData():
     xdpcHandler = initXdpcHandler()
     gamepad = vg.VX360Gamepad()
-    inputProcessor = TiltInputProcessor(gamepad,xdpcHandler)
     #inputProcessor = AccelerationInputProcessor(gamepad, xdpcHandler)
     #inputProcessor = PositionInputProcessor(gamepad, xdpcHandler)
-    #inputProcessor = InputProcessorTest(gamepad, xdpcHandler)
-    loopData(xdpcHandler, inputProcessor)
+    inputProcessor = TiltInputProcessor(gamepad, xdpcHandler)
+    inputProcessor2 = ButtonInputProcessor(gamepad, xdpcHandler)
+    loopData(xdpcHandler, inputProcessor, inputProcessor2)
 
 if __name__ == "__main__":
     recieveData()
