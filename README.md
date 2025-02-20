@@ -36,13 +36,11 @@ Using Movella dot as input for games
    ```sh
    python setup.py install
    ```
-
-## Running the Game
-
-1. Run the following script and wait for your Movella dot to connect via Bluetooth:
+   
+3. Run the following script and wait for your Movella dot to connect via Bluetooth:
    ```sh
    python ascii_racer-master/asciiracer/movelladot_receive_data.py
    ```
 
-2. Then, run `asciiracer` anywhere to start the game.
+4. Then, run `asciiracer` anywhere to start the game.
 
