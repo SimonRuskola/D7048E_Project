@@ -52,73 +52,18 @@ class TiltInputProcessor(InputProcessor):
 
         self.updateRightJoystick(x_value, y_value)
 
-class AccelerationInputProcessor(InputProcessor):
-    def __init__(self, gamepad, xdpcHandler):
-        super().__init__(gamepad, xdpcHandler)
 
-    def processInput(self, device):
-        packet = self.xdpcHandler.getNextPacket(device.portInfo().bluetoothAddress())
-        s = ""
-
-        if packet.containsFreeAcceleration():
-            acc = packet.freeAcceleration()
-            s += f"AccX:{acc[0]:7.2f}, AccY:{acc[2]:7.2f}, AccZ:{acc[1]:7.2f} | "
-        
-        print("%s\r" % s, end="", flush=True)
-        
-        x_sens = 1.0
-        y_sens = 1.0
-
-        x_value = acc[0] / x_sens
-        y_value = acc[1] / y_sens
-
-        self.updateRightJoystick(x_value, y_value)
-
-class PositionInputProcessor(InputProcessor):
-    def __init__(self, gamepad, xdpcHandler):
-        super().__init__(gamepad, xdpcHandler)
-        self.position = [0, 0, 0]
-        self.velocity = [0, 0, 0]
-        self.last_time = None
-
-    def processInput(self, device):
-        import time
-        packet = self.xdpcHandler.getNextPacket(device.portInfo().bluetoothAddress())
-        
-        if self.last_time is None:
-            self.last_time = time.time()
-            return
-
-        current_time = time.time()
-        dt = current_time - self.last_time
-        self.last_time = current_time
-
-        s = ""
-
-        if packet.containsFreeAcceleration():
-            acc = packet.freeAcceleration()
-            s += f"AccX:{acc[0]:7.2f}, AccY:{acc[2]:7.2f}, AccZ:{acc[1]:7.2f} | "
-            
-            for i in range(3):
-                self.velocity[i] += acc[i] * dt
-                self.position[i] += self.velocity[i] * dt
-
-        print("%s\r" % s, end="", flush=True)
-        
-        x_sens = 1.0
-        y_sens = 1.0
-
-        x_value = self.position[0] / x_sens
-        y_value = self.position[1] / y_sens
-
-        self.updateRightJoystick(x_value, y_value)
 
 class ButtonInputProcessor(InputProcessor):
     def __init__(self, gamepad, xdpcHandler):
         super().__init__(gamepad, xdpcHandler)
         self.filtered_acc = [0, 0, 0]
         self.alpha = 0.5  # Smoothing factor for low-pass filter
-
+        self.hysteresis_threshold = 7  # Threshold for hysteresis
+        self.hysteresis_buffer = 1  # Buffer to prevent spamming
+        self.button_pressed = False
+        self.last_press_time = 0
+        self.debounce_time = 0.5  # 500 ms debounce time
 
     def low_pass_filter(self, acc): # not sure if this helps
         for i in range(3):
@@ -138,11 +83,16 @@ class ButtonInputProcessor(InputProcessor):
 
         print("%s\r" % s, end="", flush=True)
 
+        current_time = time.time()
+        if totalAcc > self.hysteresis_threshold and not self.button_pressed:
+            if current_time - self.last_press_time > self.debounce_time:
+                self.button_pressed = True
+                self.last_press_time = current_time
+                self.gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+                self.gamepad.update()
 
-        if totalAcc > 10:
-            self.gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
-            self.gamepad.update()
-            time.sleep(0.1)  
+        elif totalAcc < (self.hysteresis_threshold - self.hysteresis_buffer) and self.button_pressed:
+            self.button_pressed = False
             self.gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
             self.gamepad.update()
 
