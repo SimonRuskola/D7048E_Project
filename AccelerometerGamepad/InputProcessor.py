@@ -44,8 +44,9 @@ class TiltInputProcessor(InputProcessor):
 
         #print("%s\r" % s, end="", flush=True)
         
-        x_sens = 40
-        y_sens = 20
+        # sensitivity for axis, lower is more sensitive
+        x_sens = 50
+        y_sens = 10
 
         x_value = euler.x() / x_sens
         y_value = euler.y() / y_sens
