@@ -54,7 +54,7 @@ def inputProcessorLoop(xdpcHandler, inputProcessor, deviceIndex):
             device = xdpcHandler.connectedDots()[deviceIndex]
             inputProcessor.processInput(device)
 
-def loopData(xdpcHandler, inputProcessor, inputProcessor2):
+def loopData(xdpcHandler, joystickInputProcessor, buttonInputProcessor):
    
     # First printing some headers so we see which data belongs to which device
     s = ""
@@ -63,8 +63,8 @@ def loopData(xdpcHandler, inputProcessor, inputProcessor2):
     print("%s" % s, flush=True)
 
     # Create and start threads for input processors
-    thread1 = threading.Thread(target=inputProcessorLoop, args=(xdpcHandler, inputProcessor, 0))
-    thread2 = threading.Thread(target=inputProcessorLoop, args=(xdpcHandler, inputProcessor2, 1))
+    thread1 = threading.Thread(target=inputProcessorLoop, args=(xdpcHandler, joystickInputProcessor, 0))
+    thread2 = threading.Thread(target=inputProcessorLoop, args=(xdpcHandler, buttonInputProcessor, 1))
     thread1.start()
     thread2.start()
 
@@ -99,11 +99,9 @@ def loopData(xdpcHandler, inputProcessor, inputProcessor2):
 def recieveData():
     xdpcHandler = initXdpcHandler()
     gamepad = vg.VX360Gamepad()
-    #inputProcessor = AccelerationInputProcessor(gamepad, xdpcHandler)
-    #inputProcessor = PositionInputProcessor(gamepad, xdpcHandler)
-    inputProcessor = TiltInputProcessor(gamepad, xdpcHandler)
-    inputProcessor2 = ButtonInputProcessor(gamepad, xdpcHandler)
-    loopData(xdpcHandler, inputProcessor, inputProcessor2)
+    joystickInputProcessor = TiltInputProcessor(gamepad, xdpcHandler)
+    buttonInputProcessor = ButtonInputProcessor(gamepad, xdpcHandler)
+    loopData(xdpcHandler, joystickInputProcessor, buttonInputProcessor)
 
 if __name__ == "__main__":
     recieveData()
