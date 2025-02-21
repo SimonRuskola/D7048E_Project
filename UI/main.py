@@ -1,8 +1,10 @@
 import sys
 import math
-from PyQt6.QtCore import Qt, QPointF
-from PyQt6.QtWidgets import QApplication, QMainWindow, QSlider, QWidget, QGridLayout, QGraphicsScene, QGraphicsView, QGraphicsItem, QGraphicsEllipseItem, QGraphicsPixmapItem
+import time
+from PyQt6.QtCore import Qt, QRunnable, QThreadPool, pyqtSlot
+from PyQt6.QtWidgets import QApplication, QMainWindow, QSlider, QWidget, QGridLayout, QGraphicsScene, QGraphicsView, QGraphicsItem, QGraphicsEllipseItem, QGraphicsPixmapItem, QPushButton
 from PyQt6.QtGui import QBrush, QPen, QPixmap
+from inputs import get_gamepad
 
 class MovableCircle(QGraphicsEllipseItem):
     def __init__(self, diameter, parent_ellipse):
@@ -25,6 +27,8 @@ class MovableCircle(QGraphicsEllipseItem):
 
         self.setPos(self.big_circle_center.x() - self.small_circle_radius, 
                     self.big_circle_center.y() - self.small_circle_radius)
+    
+
 
     def mousePressEvent(self, event):
         """Change color to black when clicked."""
@@ -51,7 +55,43 @@ class MovableCircle(QGraphicsEllipseItem):
         self.setBrush(self.default_brush)
         super().mouseReleaseEvent(event)
 
+#This class controlls the movement
+class gamePadMovement(QRunnable):
+    def __init__(self, movableCircle):
+        super().__init__()
+        self.args = movableCircle
+    
+    @pyqtSlot()
+    def run(self):
+        print("Gamepad functionality active")
+        circle = self.args
+        abs_y = 0
+        abs_x = 0
+        while 1:
+            events = get_gamepad()
+            for event in events:
+                if(event.code == "ABS_Y"):
+                    print("y = ",abs_y)
+                    abs_y = event.state/372767
+                    circle.setPos(circle.big_circle_center.x() + abs_x*circle.max_movement_radius, circle.big_circle_center.y() + abs_y*circle.max_movement_radius)
+                elif(event.code == "ABS_X"):
+                    print("x = ",abs_x)
+                    abs_x = event.state/372767
+                    circle.setPos(circle.big_circle_center.x() + abs_x*circle.max_movement_radius, circle.big_circle_center.y() + abs_y*circle.max_movement_radius)
+                else:
+                    print("other event detected")
+                    circle.setPos(circle.big_circle_center.x() - circle.small_circle_radius, 
+                    circle.big_circle_center.y() - circle.small_circle_radius)
+                
 class MainWindow(QMainWindow):
+    
+    circle = MovableCircle
+
+    def activate_controller(self):
+        #create a thread and put the circle into the worker
+        worker = gamePadMovement(self.circle)
+        self.threadpool.start(worker)
+
     def __init__(self):
         super().__init__()
 
@@ -82,8 +122,16 @@ class MainWindow(QMainWindow):
         ellipse.setPen(pen)
         scene.addItem(ellipse)
 
-        circle = MovableCircle(20, ellipse)
-        scene.addItem(circle)
+        self.circle = MovableCircle(20, ellipse)
+        scene.addItem(self.circle)
+
+        #create a thread pool
+        self.threadpool = QThreadPool()
+
+        #button to start thread: (idk if there is some better way to do this)
+        button = QPushButton("detect controller")
+        button.pressed.connect(self.activate_controller)
+        layout.addWidget(button, 0, 3)
 
         view = QGraphicsView(scene)
         layout.addWidget(view, 1, 0, 1, 3)
