@@ -32,7 +32,7 @@ class InputProcessor(ABC):
         self.gamepad.right_joystick_float(x_value_float=x_value, y_value_float=y_value)
         self.gamepad.update()
 
-    def setthreshold(self, threshold):
+    def setThreshold(self, threshold):
         self.hysteresis_threshold = threshold
 
     def setSensitivity(self, x_sens, y_sens):
