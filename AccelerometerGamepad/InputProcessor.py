@@ -54,9 +54,8 @@ class TiltInputProcessor(InputProcessor):
         self.updateRightJoystick(x_value, y_value)
 
 
-
 class ButtonInputProcessor(InputProcessor):
-    def __init__(self, gamepad, xdpcHandler):
+    def __init__(self, gamepad, xdpcHandler, button):
         super().__init__(gamepad, xdpcHandler)
         self.filtered_acc = [0, 0, 0]
         self.alpha = 0.5  # Smoothing factor for low-pass filter
@@ -65,6 +64,7 @@ class ButtonInputProcessor(InputProcessor):
         self.button_pressed = False
         self.last_press_time = 0
         self.debounce_time = 0.5  # 500 ms debounce time
+        self.button = button  # Button to be pressed
 
     def low_pass_filter(self, acc): # not sure if this helps
         for i in range(3):
@@ -89,12 +89,12 @@ class ButtonInputProcessor(InputProcessor):
             if current_time - self.last_press_time > self.debounce_time:
                 self.button_pressed = True
                 self.last_press_time = current_time
-                self.gamepad.press_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+                self.gamepad.press_button(button=self.button)
                 self.gamepad.update()
 
         elif totalAcc < (self.hysteresis_threshold - self.hysteresis_buffer) and self.button_pressed:
             self.button_pressed = False
-            self.gamepad.release_button(button=vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+            self.gamepad.release_button(button=self.button)
             self.gamepad.update()
 
 

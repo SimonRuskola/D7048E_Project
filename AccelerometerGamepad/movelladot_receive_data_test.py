@@ -100,7 +100,7 @@ def recieveData():
     xdpcHandler = initXdpcHandler()
     gamepad = vg.VX360Gamepad()
     joystickInputProcessor = TiltInputProcessor(gamepad, xdpcHandler)
-    buttonInputProcessor = ButtonInputProcessor(gamepad, xdpcHandler)
+    buttonInputProcessor = ButtonInputProcessor(gamepad, xdpcHandler, vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
     loopData(xdpcHandler, joystickInputProcessor, buttonInputProcessor)
 
 if __name__ == "__main__":
