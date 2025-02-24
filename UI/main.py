@@ -1,7 +1,7 @@
 import sys
 import math
 import time
-from PyQt6.QtCore import Qt, QRunnable, QThreadPool, pyqtSlot
+from PyQt6.QtCore import Qt, QRunnable, QThreadPool, pyqtSlot, pyqtSignal, QObject
 from PyQt6.QtWidgets import QApplication, QMainWindow, QSlider, QWidget, QGridLayout, QGraphicsScene, QGraphicsView, QGraphicsItem, QGraphicsEllipseItem, QGraphicsPixmapItem, QPushButton
 from PyQt6.QtGui import QBrush, QPen, QPixmap
 from inputs import get_gamepad
@@ -56,41 +56,35 @@ class MovableCircle(QGraphicsEllipseItem):
         super().mouseReleaseEvent(event)
 
 #This class controlls the movement
-class gamePadMovement(QRunnable):
-    def __init__(self, movableCircle):
+class GamePadWorker(QRunnable):
+    def __init__(self, fn, **kwargs):
         super().__init__()
-        self.args = movableCircle
-    
+        self.fn = fn
+        self.kwargs = kwargs
+        self.signals = WorkerSignals()
+        #Keyword argument used for coordinates
+        self.kwargs["coordinate_callback"] = self.signals.coordinates
+        
     @pyqtSlot()
     def run(self):
-        print("Gamepad functionality active")
-        circle = self.args
-        abs_y = 0
-        abs_x = 0
-        while 1:
-            events = get_gamepad()
-            for event in events:
-                if(event.code == "ABS_Y"):
-                    print("y = ",abs_y)
-                    abs_y = event.state/372767
-                    circle.setPos(circle.big_circle_center.x() + abs_x*circle.max_movement_radius, circle.big_circle_center.y() + abs_y*circle.max_movement_radius)
-                elif(event.code == "ABS_X"):
-                    print("x = ",abs_x)
-                    abs_x = event.state/372767
-                    circle.setPos(circle.big_circle_center.x() + abs_x*circle.max_movement_radius, circle.big_circle_center.y() + abs_y*circle.max_movement_radius)
-                else:
-                    print("other event detected")
-                    circle.setPos(circle.big_circle_center.x() - circle.small_circle_radius, 
-                    circle.big_circle_center.y() - circle.small_circle_radius)
+        result = self.fn(**self.kwargs)
+
+class WorkerSignals(QObject):
+    '''
+    Defines the signals available from a running worker thread.
+
+    Supported signals are:
+
+    result
+        object data returned from processing
+
+    '''
+    coordinates = pyqtSignal(object)
+    
                 
 class MainWindow(QMainWindow):
     
     circle = MovableCircle
-
-    def activate_controller(self):
-        #create a thread and put the circle into the worker
-        worker = gamePadMovement(self.circle)
-        self.threadpool.start(worker)
 
     def __init__(self):
         super().__init__()
@@ -137,6 +131,34 @@ class MainWindow(QMainWindow):
         layout.addWidget(view, 1, 0, 1, 3)
 
         self.setFixedSize(1000, 500)
+
+    #it works! I ust need to make sure that the center point is actually the center point. 
+    def gamepad_worker(self, coordinate_callback):
+        abs_y = 0
+        abs_x = 0
+        center_x = (self.circle.big_circle_center.x() - self.circle.small_circle_radius)
+        center_y = (self.circle.big_circle_center.y() - self.circle.small_circle_radius)
+        maxMove = self.circle.max_movement_radius
+        while 1:
+            events = get_gamepad()
+            for event in events:
+                if(event.code == "ABS_Y"):
+                    abs_y = event.state/32767
+                    coordinate_callback.emit((center_x + maxMove*abs_x, center_y - maxMove*abs_y))
+                elif(event.code == "ABS_X"):
+                    abs_x = event.state/32767
+                    coordinate_callback.emit((center_x + maxMove*abs_x, center_y - maxMove*abs_y))
+                elif(event.code == "BTN_SOUTH"):
+                    coordinate_callback.emit((85, 45))
+
+    def activate_controller(self):
+        #create a thread and put the circle into the worker
+        worker = GamePadWorker(self.gamepad_worker)
+        worker.signals.coordinates.connect(self.move_circle)
+        self.threadpool.start(worker)
+    
+    def move_circle(self, tuple):
+        self.circle.setPos(tuple[0], tuple[1])
 
 app = QApplication(sys.argv)
 window = MainWindow()
