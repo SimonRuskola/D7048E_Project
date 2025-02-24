@@ -13,7 +13,7 @@ class AccelerometerGamepad:
         self.buttonInputProcessorA = ButtonInputProcessor(self.gamepad, self.xdpcHandler, vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
         self.buttonInputProcessorB = ButtonInputProcessor(self.gamepad, self.xdpcHandler, vg.XUSB_BUTTON.XUSB_GAMEPAD_B)
 
-        self.input_processors = [self.joystickInputProcessor, self.buttonInputProcessorA, self.buttonInputProcessorB]
+        self.inputProcessors = [self.joystickInputProcessor, self.buttonInputProcessorA, self.buttonInputProcessorB]
 
 
     def initXdpcHandler(self):
@@ -73,7 +73,7 @@ class AccelerometerGamepad:
 
         # Create and start threads for input processors
         threads = []
-        for i, inputProcessor in enumerate(self.input_processors):
+        for i, inputProcessor in enumerate(self.inputProcessors):
             if self.xdpcHandler.connectedDots().__len__() <= i:
                 break
             thread = threading.Thread(target=self.inputProcessorLoop, args=(inputProcessor, i))
@@ -107,6 +107,13 @@ class AccelerometerGamepad:
                 print("Failed to disable logging.")
 
         self.xdpcHandler.cleanup()
+
+    def setSens(self, sens):
+        self.joystickInputProcessor.setSensitivity(sens)
+
+    def setThreshold(self, threshold):
+        for inputProcessor in self.inputProcessors:
+            inputProcessor.setThreshold(threshold)
 
 
 
