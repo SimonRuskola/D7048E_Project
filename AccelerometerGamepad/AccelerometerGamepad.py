@@ -108,8 +108,10 @@ class AccelerometerGamepad:
 
         self.xdpcHandler.cleanup()
 
-    def setSens(self, sens):
-        self.joystickInputProcessor.setSensitivity(sens)
+    def setXSens(self, xSens, ySens):
+        for inputProcessor in self.inputProcessors:
+            self.joystickInputProcessor.setSensitivity(xSens, ySens)
+        
 
     def setThreshold(self, threshold):
         for inputProcessor in self.inputProcessors:
