@@ -7,6 +7,12 @@ class InputProcessor(ABC):
     def __init__(self, gamepad, xdpcHandler):
         self.gamepad = gamepad
         self.xdpcHandler = xdpcHandler
+        # sensitivity for joystick axis, lower is more sensitive
+        self.x_sens = 50
+        self.y_sens = 10
+
+        # threshold for button press
+        self.hysteresis_threshold = 7 
 
     @abstractmethod
     def processInput(self, device):
@@ -26,13 +32,18 @@ class InputProcessor(ABC):
         self.gamepad.right_joystick_float(x_value_float=x_value, y_value_float=y_value)
         self.gamepad.update()
 
+    def setthreshold(self, threshold):
+        self.hysteresis_threshold = threshold
+
+    def setSensitivity(self, x_sens, y_sens):
+        self.x_sens = x_sens
+        self.y_sens = y_sens   
+
 class TiltInputProcessor(InputProcessor):
     def __init__(self, gamepad, xdpcHandler):
         super().__init__(gamepad, xdpcHandler)
 
-        # sensitivity for axis, lower is more sensitive
-        self.x_sens = 50
-        self.y_sens = 10
+      
 
     def processInput(self, device):
         packet = self.xdpcHandler.getNextPacket(device.portInfo().bluetoothAddress())
@@ -48,15 +59,11 @@ class TiltInputProcessor(InputProcessor):
 
         #print("%s\r" % s, end="", flush=True)
         
-
         x_value = euler.x() / self.x_sens
         y_value = euler.y() / self.y_sens
 
         self.updateRightJoystick(x_value, y_value)
 
-    def setSensitivity(self, x_sens, y_sens):
-        self.x_sens = x_sens
-        self.y_sens = y_sens
 
 
 class ButtonInputProcessor(InputProcessor):
@@ -64,7 +71,6 @@ class ButtonInputProcessor(InputProcessor):
         super().__init__(gamepad, xdpcHandler)
         self.filtered_acc = [0, 0, 0]
         self.alpha = 0.5  # Smoothing factor for low-pass filter
-        self.hysteresis_threshold = 7  # Threshold for hysteresis
         self.hysteresis_buffer = 1  # Buffer to prevent spamming
         self.button_pressed = False
         self.last_press_time = 0
@@ -103,8 +109,7 @@ class ButtonInputProcessor(InputProcessor):
             self.gamepad.release_button(button=self.button)
             self.gamepad.update()
 
-    def setthreshold(self, threshold):
-        self.hysteresis_threshold = threshold   
+
 
     
 
