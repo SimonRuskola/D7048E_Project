@@ -102,10 +102,6 @@ class AccelerometerGamepad:
         self.xdpcHandler.cleanup()
 
 
-if __name__ == "__main__":
-    gamepad = AccelerometerGamepad()
-    gamepad.loopData()
-
 
 
 
