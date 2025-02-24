@@ -30,6 +30,10 @@ class TiltInputProcessor(InputProcessor):
     def __init__(self, gamepad, xdpcHandler):
         super().__init__(gamepad, xdpcHandler)
 
+        # sensitivity for axis, lower is more sensitive
+        self.x_sens = 50
+        self.y_sens = 10
+
     def processInput(self, device):
         packet = self.xdpcHandler.getNextPacket(device.portInfo().bluetoothAddress())
         s = ""
@@ -44,14 +48,15 @@ class TiltInputProcessor(InputProcessor):
 
         #print("%s\r" % s, end="", flush=True)
         
-        # sensitivity for axis, lower is more sensitive
-        x_sens = 50
-        y_sens = 10
 
-        x_value = euler.x() / x_sens
-        y_value = euler.y() / y_sens
+        x_value = euler.x() / self.x_sens
+        y_value = euler.y() / self.y_sens
 
         self.updateRightJoystick(x_value, y_value)
+
+    def setSensitivity(self, x_sens, y_sens):
+        self.x_sens = x_sens
+        self.y_sens = y_sens
 
 
 class ButtonInputProcessor(InputProcessor):
@@ -65,6 +70,7 @@ class ButtonInputProcessor(InputProcessor):
         self.last_press_time = 0
         self.debounce_time = 0.5  # 500 ms debounce time
         self.button = button  # Button to be pressed
+
 
     def low_pass_filter(self, acc): # not sure if this helps
         for i in range(3):
@@ -96,6 +102,11 @@ class ButtonInputProcessor(InputProcessor):
             self.button_pressed = False
             self.gamepad.release_button(button=self.button)
             self.gamepad.update()
+
+    def setthreshold(self, threshold):
+        self.hysteresis_threshold = threshold   
+
+    
 
 
 
