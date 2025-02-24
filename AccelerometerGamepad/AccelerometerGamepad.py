@@ -74,6 +74,8 @@ class AccelerometerGamepad:
         # Create and start threads for input processors
         threads = []
         for i, inputProcessor in enumerate(self.input_processors):
+            if self.xdpcHandler.connectedDots().__len__() <= i:
+                break
             thread = threading.Thread(target=self.inputProcessorLoop, args=(inputProcessor, i))
             threads.append(thread)
             thread.start()
