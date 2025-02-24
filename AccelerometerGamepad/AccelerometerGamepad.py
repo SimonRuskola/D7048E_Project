@@ -10,7 +10,11 @@ class AccelerometerGamepad:
         self.xdpcHandler = self.initXdpcHandler()
         self.gamepad = vg.VX360Gamepad()
         self.joystickInputProcessor = TiltInputProcessor(self.gamepad, self.xdpcHandler)
-        self.buttonInputProcessor = ButtonInputProcessor(self.gamepad, self.xdpcHandler, vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+        self.buttonInputProcessorA = ButtonInputProcessor(self.gamepad, self.xdpcHandler, vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
+        self.buttonInputProcessorB = ButtonInputProcessor(self.gamepad, self.xdpcHandler, vg.XUSB_BUTTON.XUSB_GAMEPAD_B)
+
+        self.input_processors = [self.joystickInputProcessor, self.buttonInputProcessorA, self.buttonInputProcessorB]
+
 
     def initXdpcHandler(self):
         xdpcHandler = XdpcHandler()
@@ -68,19 +72,20 @@ class AccelerometerGamepad:
         print("%s" % s, flush=True)
 
         # Create and start threads for input processors
-        thread1 = threading.Thread(target=self.inputProcessorLoop, args=(self.joystickInputProcessor, 0))
-        thread2 = threading.Thread(target=self.inputProcessorLoop, args=(self.buttonInputProcessor, 1))
-        thread1.start()
-        thread2.start()
+        threads = []
+        for i, inputProcessor in enumerate(self.input_processors):
+            thread = threading.Thread(target=self.inputProcessorLoop, args=(inputProcessor, i))
+            threads.append(thread)
+            thread.start()
 
         try:
-            while thread1.is_alive() and thread2.is_alive():
-                thread1.join(timeout=1)
-                thread2.join(timeout=1)
+            while any(thread.is_alive() for thread in threads):
+                for thread in threads:
+                    thread.join(timeout=1)
         except KeyboardInterrupt:
             self.stop_event.set()
-            thread1.join()
-            thread2.join()
+            for thread in threads:
+                thread.join()
 
         print("\n-----------------------------------------", end="", flush=True)
 
