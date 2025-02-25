@@ -5,7 +5,8 @@ from PyQt6.QtCore import Qt, QRunnable, QThreadPool, pyqtSlot, pyqtSignal, QObje
 from PyQt6.QtWidgets import QApplication, QMainWindow, QSlider, QWidget, QGridLayout, QGraphicsScene, QGraphicsView, QGraphicsItem, QGraphicsEllipseItem, QGraphicsPixmapItem, QPushButton
 from PyQt6.QtGui import QBrush, QPen, QPixmap
 from inputs import get_gamepad
-import AccelerometerGamepad 
+import AccelerometerGamepad
+import AccelerometerGamepad.AccelerometerGamepad 
 
 class MovableCircle(QGraphicsEllipseItem):
     def __init__(self, diameter, parent_ellipse):
@@ -70,6 +71,16 @@ class GamePadWorker(QRunnable):
     def run(self):
         result = self.fn(**self.kwargs)
 
+class AccelerometerWorker(QRunnable):
+    def __init__(self, fn):
+        super().__init__()
+        self.fn = fn
+
+        
+    @pyqtSlot()
+    def run(self):
+        result = self.fn()
+
 class WorkerSignals(QObject):
     '''
     Defines the signals available from a running worker thread.
@@ -87,15 +98,18 @@ class MainWindow(QMainWindow):
     
     circle = MovableCircle
 
+    changeSensitivity = pyqtSignal(object)
+
     def __init__(self):
         super().__init__()
-
         self.setWindowTitle("My App")
-
+    
         layout = QGridLayout()
-        slider = QSlider(Qt.Orientation.Horizontal)
-        # slider.sliderReleased.connect() # here connect to another function
-        layout.addWidget(slider, 0, 2)
+        self.slider = QSlider(Qt.Orientation.Horizontal)
+        self.slider.sliderReleased.connect(self.setSensitivity)
+
+        self.changeSensitivity.connect(AccelerometerGamepad.changeSensitivity)
+        layout.addWidget(self.slider, 0, 2)
 
         widget = QWidget()
         widget.setLayout(layout)
@@ -158,7 +172,7 @@ class MainWindow(QMainWindow):
         gamepad.loopData()
 
     def activate_controller(self):
-        accelerometer_worker = GamePadWorker(self.accelerometer_worker)
+        accelerometer_worker = AccelerometerWorker(self.accelerometer_worker)
         self.threadpool.start(accelerometer_worker)
     
         #create a thread and put the circle into the worker
@@ -170,7 +184,8 @@ class MainWindow(QMainWindow):
     def move_circle(self, tuple):
         self.circle.setPos(tuple[0], tuple[1])
 
-
+    def setSensitivity(self):
+        self.changeSensitivity.emit(self.slider.value)
 
 
 app = QApplication(sys.argv)
