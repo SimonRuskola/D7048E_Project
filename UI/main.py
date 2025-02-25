@@ -5,6 +5,7 @@ from PyQt6.QtCore import Qt, QRunnable, QThreadPool, pyqtSlot, pyqtSignal, QObje
 from PyQt6.QtWidgets import QApplication, QMainWindow, QSlider, QWidget, QGridLayout, QGraphicsScene, QGraphicsView, QGraphicsItem, QGraphicsEllipseItem, QGraphicsPixmapItem, QPushButton
 from PyQt6.QtGui import QBrush, QPen, QPixmap
 from inputs import get_gamepad
+import AccelerometerGamepad
 
 class MovableCircle(QGraphicsEllipseItem):
     def __init__(self, diameter, parent_ellipse):
@@ -93,6 +94,7 @@ class MainWindow(QMainWindow):
 
         layout = QGridLayout()
         slider = QSlider(Qt.Orientation.Horizontal)
+        slider.sliderReleased.connect() # here connect to another function
         layout.addWidget(slider, 0, 2)
 
         widget = QWidget()
@@ -151,14 +153,22 @@ class MainWindow(QMainWindow):
                 elif(event.code == "BTN_SOUTH"):
                     coordinate_callback.emit((85, 45))
 
+    def accelerometer_worker(slef) :
+        gamepad = AccelerometerGamepad()
+        gamepad.loopData()
+
     def activate_controller(self):
         #create a thread and put the circle into the worker
         worker = GamePadWorker(self.gamepad_worker)
         worker.signals.coordinates.connect(self.move_circle)
         self.threadpool.start(worker)
+
+        accelerometer_worker = GamePadWorker(self.accelerometer_worker)
+        self.threadpool.start(accelerometer_worker)
     
     def move_circle(self, tuple):
         self.circle.setPos(tuple[0], tuple[1])
+
 
 app = QApplication(sys.argv)
 window = MainWindow()
