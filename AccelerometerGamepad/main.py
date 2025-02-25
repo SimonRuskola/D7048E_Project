@@ -106,6 +106,8 @@ class MainWindow(QMainWindow):
     
         layout = QGridLayout()
         self.slider = QSlider(Qt.Orientation.Horizontal)
+        self.slider.setRange(0,100)
+        self.slider.setValue(50)
         self.slider.sliderReleased.connect(self.setSensitivity)
 
         self.changeSensitivity.connect(AccelerometerGamepad.changeSensitivity)
@@ -185,7 +187,7 @@ class MainWindow(QMainWindow):
         self.circle.setPos(tuple[0], tuple[1])
 
     def setSensitivity(self):
-        self.changeSensitivity.emit(self.slider.value)
+        self.changeSensitivity.emit(self.slider.tickPosition)
 
 
 app = QApplication(sys.argv)
