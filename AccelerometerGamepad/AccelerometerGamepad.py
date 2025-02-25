@@ -3,6 +3,7 @@ import vgamepad as vg
 import time
 from InputProcessor import *
 import threading
+from PyQt6.QtCore import Qt, QRunnable, QThreadPool, pyqtSlot, pyqtSignal, QObject
 
 class AccelerometerGamepad:
     def __init__(self):
@@ -108,6 +109,7 @@ class AccelerometerGamepad:
 
         self.xdpcHandler.cleanup()
 
+
     def setXSens(self, xSens, ySens):
         for inputProcessor in self.inputProcessors:
             self.joystickInputProcessor.setSensitivity(xSens, ySens)
@@ -117,6 +119,10 @@ class AccelerometerGamepad:
         for inputProcessor in self.inputProcessors:
             inputProcessor.setThreshold(threshold)
 
+
+    @pyqtSlot
+    def changeSensitivity(self, value):
+        self.setXSens(value,value)
 
 
 
