@@ -94,7 +94,7 @@ class MainWindow(QMainWindow):
 
         layout = QGridLayout()
         slider = QSlider(Qt.Orientation.Horizontal)
-        slider.sliderReleased.connect() # here connect to another function
+        # slider.sliderReleased.connect() # here connect to another function
         layout.addWidget(slider, 0, 2)
 
         widget = QWidget()
@@ -103,7 +103,7 @@ class MainWindow(QMainWindow):
 
         scene = QGraphicsScene(0, 0, 400, 300)
 
-        controller_image = QPixmap("./UI/controller.png")
+        controller_image = QPixmap("../UI/controller.png")
         controller_image = controller_image.scaled(400, 275, Qt.AspectRatioMode.KeepAspectRatio)
 
         controller_pixmap_item = QGraphicsPixmapItem(controller_image)
@@ -141,33 +141,36 @@ class MainWindow(QMainWindow):
         center_x = (self.circle.big_circle_center.x() - self.circle.small_circle_radius)
         center_y = (self.circle.big_circle_center.y() - self.circle.small_circle_radius)
         maxMove = self.circle.max_movement_radius
-        while 1:
-            events = get_gamepad()
-            for event in events:
-                if(event.code == "ABS_Y"):
-                    abs_y = event.state/32767
-                    coordinate_callback.emit((center_x + maxMove*abs_x, center_y - maxMove*abs_y))
-                elif(event.code == "ABS_X"):
-                    abs_x = event.state/32767
-                    coordinate_callback.emit((center_x + maxMove*abs_x, center_y - maxMove*abs_y))
-                elif(event.code == "BTN_SOUTH"):
-                    coordinate_callback.emit((85, 45))
+        # while 1:
+        #     events = get_gamepad()
+        #     for event in events:
+        #         if(event.code == "ABS_Y"):
+        #             abs_y = event.state/32767
+        #             coordinate_callback.emit((center_x + maxMove*abs_x, center_y - maxMove*abs_y))
+        #         elif(event.code == "ABS_X"):
+        #             abs_x = event.state/32767
+        #             coordinate_callback.emit((center_x + maxMove*abs_x, center_y - maxMove*abs_y))
+        #         elif(event.code == "BTN_SOUTH"):
+        #             coordinate_callback.emit((85, 45))
 
-    def accelerometer_worker(slef) :
+    def accelerometer_worker(self) :
         gamepad = AccelerometerGamepad()
         gamepad.loopData()
 
     def activate_controller(self):
+        accelerometer_worker = GamePadWorker(self.accelerometer_worker)
+        self.threadpool.start(accelerometer_worker)
+    
         #create a thread and put the circle into the worker
         worker = GamePadWorker(self.gamepad_worker)
         worker.signals.coordinates.connect(self.move_circle)
         self.threadpool.start(worker)
 
-        accelerometer_worker = GamePadWorker(self.accelerometer_worker)
-        self.threadpool.start(accelerometer_worker)
     
     def move_circle(self, tuple):
         self.circle.setPos(tuple[0], tuple[1])
+
+
 
 
 app = QApplication(sys.argv)
