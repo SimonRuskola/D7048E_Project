@@ -110,7 +110,7 @@ class AccelerometerGamepad:
         self.xdpcHandler.cleanup()
 
 
-    def setXSens(self, xSens, ySens):
+    def setSens(self, xSens, ySens):
         for inputProcessor in self.inputProcessors:
             self.joystickInputProcessor.setSensitivity(xSens, ySens)
         
@@ -122,7 +122,7 @@ class AccelerometerGamepad:
 
     @pyqtSlot
     def changeSensitivity(self, value):
-        self.setXSens(value,value)
+        self.setSens(value,value)
 
 
 
