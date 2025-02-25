@@ -5,8 +5,10 @@ from PyQt6.QtCore import Qt, QRunnable, QThreadPool, pyqtSlot, pyqtSignal, QObje
 from PyQt6.QtWidgets import QApplication, QMainWindow, QSlider, QWidget, QGridLayout, QGraphicsScene, QGraphicsView, QGraphicsItem, QGraphicsEllipseItem, QGraphicsPixmapItem, QPushButton
 from PyQt6.QtGui import QBrush, QPen, QPixmap
 from inputs import get_gamepad
-import AccelerometerGamepad
-import AccelerometerGamepad.AccelerometerGamepad 
+#import AccelerometerGamepad
+#import AccelerometerGamepad.AccelerometerGamepad 
+from AccelerometerGamepad import *
+
 
 class MovableCircle(QGraphicsEllipseItem):
     def __init__(self, diameter, parent_ellipse):

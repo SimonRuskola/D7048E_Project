@@ -13,7 +13,6 @@ class AccelerometerGamepad:
         self.joystickInputProcessor = TiltInputProcessor(self.gamepad, self.xdpcHandler)
         self.buttonInputProcessorA = ButtonInputProcessor(self.gamepad, self.xdpcHandler, vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
         self.buttonInputProcessorB = ButtonInputProcessor(self.gamepad, self.xdpcHandler, vg.XUSB_BUTTON.XUSB_GAMEPAD_B)
-
         self.inputProcessors = [self.joystickInputProcessor, self.buttonInputProcessorA, self.buttonInputProcessorB]
 
 
@@ -120,7 +119,7 @@ class AccelerometerGamepad:
             inputProcessor.setThreshold(threshold)
 
 
-    @pyqtSlot
+    @pyqtSlot(float)
     def changeSensitivity(self, value):
         self.setSens(value,value)
 
