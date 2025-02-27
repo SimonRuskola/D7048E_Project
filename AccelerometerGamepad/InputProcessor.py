@@ -13,12 +13,19 @@ class InputProcessor(ABC):
 
         # threshold for button press
         self.hysteresis_threshold = 7 
+        self.deadzone = 0.1  # Default deadzone value
 
     @abstractmethod
     def processInput(self, device):
         pass
 
     def updateRightJoystick(self, x_value, y_value): # todo maybe include deadzone
+        # Apply deadzone
+        if abs(x_value) < self.deadzone:
+            x_value = 0
+        if abs(y_value) < self.deadzone:
+            y_value = 0
+
         if x_value > 1:
             x_value = 1
         if x_value < -1:
@@ -38,6 +45,9 @@ class InputProcessor(ABC):
     def setSensitivity(self, x_sens, y_sens):
         self.x_sens = x_sens
         self.y_sens = y_sens   
+
+    def setDeadzone(self, deadzone):
+        self.deadzone = deadzone
 
 class TiltInputProcessor(InputProcessor):
     def __init__(self, gamepad, xdpcHandler):
@@ -94,7 +104,7 @@ class ButtonInputProcessor(InputProcessor):
             s += f"AccX:{filtered_acc[0]:7.2f}, AccY:{filtered_acc[2]:7.2f}, AccZ:{filtered_acc[1]:7.2f}, AccTot:{totalAcc:7.2f}  | "
         
 
-        print("%s\r" % s, end="", flush=True)
+        #print("%s\r" % s, end="", flush=True)
 
         current_time = time.time()
         if totalAcc > self.hysteresis_threshold and not self.button_pressed:
@@ -111,7 +121,7 @@ class ButtonInputProcessor(InputProcessor):
 
 
 
-    
+
 
 
 

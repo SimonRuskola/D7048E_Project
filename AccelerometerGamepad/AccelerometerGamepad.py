@@ -12,7 +12,7 @@ class AccelerometerGamepad:
         self.gamepad = vg.VX360Gamepad()
         self.joystickInputProcessor = TiltInputProcessor(self.gamepad, self.xdpcHandler)
         self.buttonInputProcessorA = ButtonInputProcessor(self.gamepad, self.xdpcHandler, vg.XUSB_BUTTON.XUSB_GAMEPAD_A)
-        self.buttonInputProcessorB = ButtonInputProcessor(self.gamepad, self.xdpcHandler, vg.XUSB_BUTTON.XUSB_GAMEPAD_B)
+        self.buttonInputProcessorB = ButtonInputProcessor(self.gamepad, self.xdpcHandler, vg.XUSB_BUTTON.XUSB_GAMEPAD_START)
         self.inputProcessors = [self.joystickInputProcessor, self.buttonInputProcessorA, self.buttonInputProcessorB]
 
 
